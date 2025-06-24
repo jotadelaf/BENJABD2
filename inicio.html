@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Empleados</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .menu {
+            background-color: #007bff;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .menu a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .menu a.active {
+            background-color: #0056b3;
+            border-radius: 3px;
+        }
+        .formulario {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            display: none;
+        }
+        .formulario.active {
+            display: block;
+        }
+        .formulario h3 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+        input[type="submit"] {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+        .resultado {
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 3px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sistema de Gestión de Empleados</h1>
+        
+        <!-- Menú de navegación -->
+        <div class="menu">
+            <a href="#insertar" class="active" onclick="mostrarFormulario(event, 'insertar')">Insertar</a>
+            <a href="#actualizar" onclick="mostrarFormulario(event, 'actualizar')">Actualizar</a>
+            <a href="#eliminar" onclick="mostrarFormulario(event, 'eliminar')">Eliminar</a>
+            <a href="#listar" onclick="mostrarFormulario(event, 'listar')">Listar</a>
+            <a href="#estadisticas" onclick="mostrarFormulario(event, 'estadisticas')">Estadísticas</a>
+        </div>
+
+        <!-- Formulario 1: Insertar Empleado -->
+        <div class="formulario active" id="insertar">
+            <h3>1. Insertar Nuevo Empleado</h3>
+            <form action="insertar.php" method="POST">
+                <label>ID:</label>
+                <input type="number" name="id" required>
+                
+                <label>Nombre:</label>
+                <input type="text" name="nombre" required>
+                
+                <label>Apellido:</label>
+                <input type="text" name="apellido" required>
+                
+                <label>Sexo:</label>
+                <select name="sexo" required>
+                    <option value="">Seleccionar...</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Femenino">Femenino</option>
+                </select>
+                
+                <label>Sueldo:</label>
+                <input type="number" name="sueldo" required>
+                
+                <input type="submit" value="Insertar Empleado">
+            </form>
+        </div>
+
+        <!-- Formulario 2: Actualizar Sueldo -->
+        <div class="formulario" id="actualizar">
+            <h3>2. Actualizar Sueldo de Empleado</h3>
+            <form action="actualizar.php" method="POST">
+                <label>ID del Empleado:</label>
+                <input type="number" name="id" required>
+                
+                <label>Porcentaje de Aumento:</label>
+                <input type="number" name="porcentaje" required>
+                
+                <input type="submit" value="Actualizar Sueldo">
+            </form>
+        </div>
+
+        <!-- Formulario 3: Eliminar Empleado -->
+        <div class="formulario" id="eliminar">
+            <h3>3. Eliminar Empleado</h3>
+            <form action="eliminar.php" method="POST">
+                <label>ID del Empleado a Eliminar:</label>
+                <input type="number" name="id" required>
+                
+                <input type="submit" value="Eliminar Empleado">
+            </form>
+        </div>
+
+        <!-- Formulario 4: Listar Empleados -->
+        <div class="formulario" id="listar">
+            <h3>4. Listar Todos los Empleados</h3>
+            <form action="listar1.php" method="GET">
+                <input type="submit" value="Ver Lista de Empleados">
+            </form>
+        </div>
+
+        <!-- Formulario 5: Estadísticas -->
+        <div class="formulario" id="estadisticas">
+            <h3>5. Calcular Estadísticas por Sexo</h3>
+            <form action="listar2.php" method="POST">
+                <label>Sexo para Estadísticas:</label>
+                <select name="sexo" required>
+                    <option value="">Seleccionar...</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Femenino">Femenino</option>
+                </select>
+                
+                <input type="submit" value="Calcular Estadísticas">
+            </form>
+        </div>
+    </div>
+    <script>
+        // Función para mostrar solo el formulario seleccionado y resaltar el menú
+        function mostrarFormulario(event, id) {
+            event.preventDefault();
+            // Ocultar todos los formularios
+            var formularios = document.getElementsByClassName('formulario');
+            for (var i = 0; i < formularios.length; i++) {
+                formularios[i].classList.remove('active');
+            }
+            // Mostrar el formulario seleccionado
+            document.getElementById(id).classList.add('active');
+            // Quitar clase activa del menú
+            var links = document.querySelectorAll('.menu a');
+            for (var i = 0; i < links.length; i++) {
+                links[i].classList.remove('active');
+            }
+            // Agregar clase activa al menú seleccionado
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html> 
