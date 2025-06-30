@@ -157,7 +157,7 @@ if (!$result) {
                 <th>Apellido</th>
                 <th>Sexo</th>
                 <th>Sueldo Actual</th>
-                <th>Acciones</th>
+                <th>Actualizar Sueldo</th>
             </tr>
         </thead>
         <tbody>
@@ -174,11 +174,6 @@ if (!$result) {
                             <input type="number" name="porcentaje" placeholder="%" min="-100" max="1000" required>
                             <button type="submit" class="btn btn-success">Actualizar</button>
                         </form>
-                        <a href="eliminar.php?id=<?php echo $empleado['id']; ?>" 
-                           class="btn btn-danger" 
-                           onclick="return confirm('¿Estás seguro de eliminar a <?php echo htmlspecialchars($empleado['Nombre'] . ' ' . $empleado['Apellido']); ?>?')">
-                            Eliminar
-                        </a>
                     </td>
                 </tr>
             <?php endforeach; ?>
