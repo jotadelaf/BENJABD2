@@ -328,10 +328,114 @@
                 .then(response => response.text())
                 .then(data => {
                     container.innerHTML = data;
+                    // Ejecutar el JavaScript después de cargar el contenido
+                    setTimeout(function() {
+                        inicializarFormulariosActualizar();
+                    }, 100);
                 })
                 .catch(error => {
                     container.innerHTML = '<div style="text-align: center; padding: 20px; color: #e74c3c;">❌ Error al cargar el formulario de actualización</div>';
                 });
+        }
+        
+        // Función para inicializar los formularios de actualizar
+        function inicializarFormulariosActualizar() {
+            const forms = document.querySelectorAll('.actualizar-form');
+            
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation(); // Evitar que el evento se propague
+                    
+                    if (!confirmarActualizacion()) {
+                        return false;
+                    }
+                    
+                    const formData = new FormData(this);
+                    formData.append('ajax', '1');
+                    
+                    // Deshabilitar el botón durante la actualización
+                    const button = this.querySelector('button[type="submit"]');
+                    const originalText = button.textContent;
+                    button.disabled = true;
+                    button.textContent = 'Actualizando...';
+                    
+                    fetch('actualizar.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        // Mostrar mensaje
+                        mostrarMensaje(data.mensaje, data.tipo);
+                        
+                        // Limpiar el campo de porcentaje
+                        this.querySelector('input[name="porcentaje"]').value = '';
+                        
+                        // Actualizar el sueldo en la tabla si fue exitoso
+                        if (data.tipo === 'success') {
+                            actualizarSueldoEnTabla(data.mensaje);
+                        }
+                    })
+                    .catch(error => {
+                        mostrarMensaje('❌ Error en la comunicación: ' + error.message, 'error');
+                    })
+                    .finally(() => {
+                        // Restaurar el botón
+                        button.disabled = false;
+                        button.textContent = originalText;
+                    });
+                    
+                    return false; // Prevenir cualquier comportamiento por defecto
+                });
+            });
+        }
+        
+        function confirmarActualizacion() {
+            return confirm('¿Estás seguro de que quieres actualizar el sueldo de este empleado?');
+        }
+        
+        function mostrarMensaje(mensaje, tipo) {
+            let mensajeDiv = document.getElementById('mensaje-actualizacion');
+            if (!mensajeDiv) {
+                mensajeDiv = document.createElement('div');
+                mensajeDiv.id = 'mensaje-actualizacion';
+                mensajeDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 15px 20px;
+                    border-radius: 5px;
+                    color: white;
+                    font-weight: bold;
+                    z-index: 1000;
+                    display: none;
+                    animation: slideIn 0.3s ease-out;
+                `;
+                document.body.appendChild(mensajeDiv);
+            }
+            
+            mensajeDiv.textContent = mensaje;
+            mensajeDiv.className = tipo;
+            mensajeDiv.style.display = 'block';
+            mensajeDiv.style.background = tipo === 'success' ? '#27ae60' : '#e74c3c';
+            
+            // Ocultar después de 5 segundos
+            setTimeout(() => {
+                mensajeDiv.style.display = 'none';
+            }, 5000);
+        }
+        
+        function actualizarSueldoEnTabla(mensaje) {
+            // Extraer información del mensaje para actualizar la tabla
+            const match = mensaje.match(/ID: (\d+).*De \$(\d+) a \$(\d+)/);
+            if (match) {
+                const id = match[1];
+                const nuevoSueldo = match[3];
+                const row = document.querySelector(`form[data-id="${id}"]`).closest('tr');
+                const sueldoCell = row.querySelector('td:nth-child(5)');
+                sueldoCell.textContent = '$' + parseInt(nuevoSueldo).toLocaleString();
+            }
         }
         
         // Cargar contenido automáticamente al cargar la página si el formulario de listar está activo

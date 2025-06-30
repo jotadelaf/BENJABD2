@@ -9,6 +9,7 @@ DROP PROCEDURE IF EXISTS EliminaEmpleado;
 DROP PROCEDURE IF EXISTS ListaEmpleados;
 DROP PROCEDURE IF EXISTS CalculaEstadisticas;
 DROP PROCEDURE IF EXISTS BuscarYActualizarSueldo;
+DROP PROCEDURE IF EXISTS ActualizarSueldoYListar;
 
 -- Eliminar triggers existentes si existen
 DROP TRIGGER IF EXISTS EmpleadoInsert;
@@ -62,13 +63,52 @@ BEGIN
 END //
 DELIMITER ;
 
--- PROCEDIMIENTO 2: Actualizar sueldo
+-- PROCEDIMIENTO 2: Actualizar sueldo y listar empleados (VERSIÓN FINAL)
 DELIMITER //
-CREATE PROCEDURE ActualizaSueldo(IN porcentaje INT, IN idE INT)
+CREATE PROCEDURE ActualizarSueldoYListar(
+    IN porcentaje INT, 
+    IN idE INT
+)
 BEGIN
-    UPDATE Empleado
-    SET Sueldo = Sueldo * (1 + porcentaje/100)
+    DECLARE empleado_existe INT DEFAULT 0;
+    DECLARE sueldo_anterior INT;
+    DECLARE sueldo_nuevo INT;
+    DECLARE nombre_empleado VARCHAR(200);
+    DECLARE mensaje_resultado VARCHAR(255);
+    
+    -- Verificar si el empleado existe y obtener sus datos
+    SELECT COUNT(*) INTO empleado_existe
+    FROM Empleado 
     WHERE id = idE;
+    
+    IF empleado_existe > 0 THEN
+        -- Obtener datos del empleado
+        SELECT Sueldo, CONCAT(Nombre, ' ', Apellido) 
+        INTO sueldo_anterior, nombre_empleado
+        FROM Empleado 
+        WHERE id = idE;
+        
+        -- Calcular nuevo sueldo
+        SET sueldo_nuevo = sueldo_anterior * (1 + porcentaje/100);
+        
+        -- Actualizar sueldo
+        UPDATE Empleado
+        SET Sueldo = sueldo_nuevo
+        WHERE id = idE;
+        
+        -- Configurar mensaje de éxito
+        SET mensaje_resultado = CONCAT('✅ Sueldo actualizado correctamente para ', nombre_empleado, 
+                           ' (ID: ', idE, '). De $', sueldo_anterior, ' a $', sueldo_nuevo, 
+                           ' (aumento del ', porcentaje, '%)');
+    ELSE
+        SET mensaje_resultado = CONCAT('❌ Error: No se encontró un empleado con ID ', idE);
+    END IF;
+    
+    -- Devolver mensaje como primer resultado
+    SELECT mensaje_resultado as mensaje;
+    
+    -- Devolver lista de empleados como segundo resultado
+    SELECT * FROM Empleado ORDER BY Nombre, Apellido;
 END //
 DELIMITER ;
 

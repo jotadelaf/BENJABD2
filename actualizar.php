@@ -2,13 +2,13 @@
 // Incluir archivo de configuración
 include 'config.php';
 
-// Procesar actualización de sueldo
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// Si es una petición AJAX (actualización)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
     $id = $_POST['id'];
     $porcentaje = $_POST['porcentaje'];
     
     // Preparar la llamada al procedimiento almacenado
-    $sql = "CALL ActualizaSueldo(?, ?)";
+    $sql = "CALL ActualizarSueldoYListar(?, ?)";
     
     // Crear statement preparado
     $stmt = $conexion->prepare($sql);
@@ -18,26 +18,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Ejecutar el procedimiento
     if ($stmt->execute()) {
-        $mensaje = "✅ Sueldo actualizado correctamente para el empleado ID: $id";
-        $tipo_mensaje = "success";
+        // Obtener el primer resultado (mensaje)
+        $result = $stmt->get_result();
+        if ($result && $row = $result->fetch_assoc()) {
+            $mensaje = $row['mensaje'];
+        }
+        
+        // Cerrar el primer resultado
+        $stmt->free_result();
+        
+        // Obtener el segundo resultado (lista de empleados) pero no la procesamos
+        $stmt->next_result();
+        $result = $stmt->get_result();
+        $stmt->free_result();
+        
+        $tipo_mensaje = strpos($mensaje, '✅') !== false ? 'success' : 'error';
     } else {
-        $mensaje = "❌ Error al actualizar: " . $stmt->error;
+        $mensaje = "❌ Error al ejecutar el procedimiento: " . $stmt->error;
         $tipo_mensaje = "error";
     }
     
     // Cerrar statement
     $stmt->close();
+    
+    // Devolver respuesta JSON
+    header('Content-Type: application/json');
+    echo json_encode(['mensaje' => $mensaje, 'tipo' => $tipo_mensaje]);
+    exit;
 }
 
-// Obtener lista de empleados
+// Obtener lista de empleados para mostrar inicialmente
+$empleados = [];
 $sql = "SELECT * FROM Empleado ORDER BY Nombre, Apellido";
 $result = $conexion->query($sql);
 
 if (!$result) {
     $error_lista = "❌ Error al obtener empleados: " . $conexion->error;
-    $empleados = [];
 } else {
-    $empleados = [];
     while ($row = $result->fetch_assoc()) {
         $empleados[] = $row;
     }
@@ -136,12 +153,6 @@ if (!$result) {
     }
 </style>
 
-<?php if (isset($mensaje)): ?>
-    <div class="message <?php echo $tipo_mensaje; ?>">
-        <?php echo $mensaje; ?>
-    </div>
-<?php endif; ?>
-
 <?php if (isset($error_lista)): ?>
     <div class="message error">
         <?php echo $error_lista; ?>
@@ -169,7 +180,7 @@ if (!$result) {
                     <td><?php echo htmlspecialchars($empleado['Sexo']); ?></td>
                     <td>$<?php echo number_format($empleado['Sueldo'], 2); ?></td>
                     <td>
-                        <form class="form-inline" action="actualizar.php" method="POST">
+                        <form class="form-inline actualizar-form" data-id="<?php echo $empleado['id']; ?>">
                             <input type="hidden" name="id" value="<?php echo $empleado['id']; ?>">
                             <input type="number" name="porcentaje" placeholder="%" min="-100" max="1000" required>
                             <button type="submit" class="btn btn-success">Actualizar</button>
