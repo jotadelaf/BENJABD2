@@ -2,6 +2,18 @@
 CREATE DATABASE IF NOT EXISTS empresa;
 USE empresa;
 
+-- Eliminar procedimientos existentes si existen
+DROP PROCEDURE IF EXISTS InsertaEmpleado;
+DROP PROCEDURE IF EXISTS ActualizaSueldo;
+DROP PROCEDURE IF EXISTS EliminaEmpleado;
+DROP PROCEDURE IF EXISTS ListaEmpleados;
+DROP PROCEDURE IF EXISTS CalculaEstadisticas;
+DROP PROCEDURE IF EXISTS BuscarYActualizarSueldo;
+
+-- Eliminar triggers existentes si existen
+DROP TRIGGER IF EXISTS EmpleadoInsert;
+DROP TRIGGER IF EXISTS EmpleadoUpdate;
+
 -- Crear la tabla Empleado
 CREATE TABLE IF NOT EXISTS Empleado (
     id INT PRIMARY KEY,
@@ -33,16 +45,6 @@ CREATE TABLE IF NOT EXISTS temp_Empleado_Update (
     Sueldo_anterior INT,
     Sueldo_nuevo INT,
     fecha_actualizacion DATETIME
-);
-
--- Crear tabla de respaldo para DELETE
-CREATE TABLE IF NOT EXISTS temp_Empleado_Delete (
-    id INT,
-    Nombre VARCHAR(100),
-    Apellido VARCHAR(100),
-    Sexo VARCHAR(20),
-    Sueldo INT,
-    fecha_eliminacion DATETIME
 );
 
 -- PROCEDIMIENTO 1: Insertar empleado
@@ -164,18 +166,8 @@ BEGIN
 END //
 DELIMITER ;
 
--- TRIGGER 3: Para DELETE
-DELIMITER //
-CREATE TRIGGER EmpleadoDelete 
-AFTER DELETE ON Empleado
-FOR EACH ROW
-BEGIN
-    INSERT INTO temp_Empleado_Delete (id, Nombre, Apellido, Sexo, Sueldo, fecha_eliminacion)
-    VALUES (OLD.id, OLD.Nombre, OLD.Apellido, OLD.Sexo, OLD.Sueldo, NOW());
-END //
-DELIMITER ;
-
 -- Insertar algunos datos de ejemplo
+DELETE FROM Empleado;
 INSERT INTO Empleado VALUES (1, 'Juan', 'Pérez', 'Masculino', 2500);
 INSERT INTO Empleado VALUES (2, 'María', 'García', 'Femenino', 2800);
 INSERT INTO Empleado VALUES (3, 'Carlos', 'López', 'Masculino', 2200);
