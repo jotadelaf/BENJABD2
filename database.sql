@@ -179,4 +179,48 @@ DELIMITER ;
 INSERT INTO Empleado VALUES (1, 'Juan', 'Pérez', 'Masculino', 2500);
 INSERT INTO Empleado VALUES (2, 'María', 'García', 'Femenino', 2800);
 INSERT INTO Empleado VALUES (3, 'Carlos', 'López', 'Masculino', 2200);
-INSERT INTO Empleado VALUES (4, 'Ana', 'Martínez', 'Femenino', 3000); 
+INSERT INTO Empleado VALUES (4, 'Ana', 'Martínez', 'Femenino', 3000);
+
+-- PROCEDIMIENTO 6: Buscar empleado por nombre y actualizar sueldo
+DELIMITER //
+CREATE PROCEDURE BuscarYActualizarSueldo(
+    IN nombre_buscar VARCHAR(100),
+    IN porcentaje_aumento INT,
+    OUT empleado_encontrado BOOLEAN,
+    OUT mensaje VARCHAR(255)
+)
+BEGIN
+    DECLARE empleado_id INT;
+    DECLARE sueldo_actual INT;
+    DECLARE sueldo_nuevo INT;
+    DECLARE nombre_completo VARCHAR(200);
+    
+    -- Buscar empleado por nombre (búsqueda parcial)
+    SELECT id, Sueldo, CONCAT(Nombre, ' ', Apellido) 
+    INTO empleado_id, sueldo_actual, nombre_completo
+    FROM Empleado 
+    WHERE Nombre LIKE CONCAT('%', nombre_buscar, '%') 
+       OR Apellido LIKE CONCAT('%', nombre_buscar, '%')
+    LIMIT 1;
+    
+    -- Verificar si se encontró el empleado
+    IF empleado_id IS NOT NULL THEN
+        -- Calcular nuevo sueldo
+        SET sueldo_nuevo = sueldo_actual * (1 + porcentaje_aumento/100);
+        
+        -- Actualizar sueldo
+        UPDATE Empleado 
+        SET Sueldo = sueldo_nuevo 
+        WHERE id = empleado_id;
+        
+        -- Configurar variables de salida
+        SET empleado_encontrado = TRUE;
+        SET mensaje = CONCAT('Empleado encontrado: ', nombre_completo, 
+                           '. Sueldo actualizado de $', sueldo_actual, 
+                           ' a $', sueldo_nuevo, ' (aumento del ', porcentaje_aumento, '%)');
+    ELSE
+        SET empleado_encontrado = FALSE;
+        SET mensaje = CONCAT('No se encontró ningún empleado con el nombre: ', nombre_buscar);
+    END IF;
+END //
+DELIMITER ; 
